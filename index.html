@@ -58,8 +58,10 @@
       </div>
       <label>Scheduled departure<input id="departureTime" type="datetime-local" /></label>
       <div class="grid two">
-        <label>Aircraft<input id="aircraft" placeholder="737-900 / 787-9" /></label>
-        <label>Cabin layout<select id="cabinLayout"><option value="domestic2">Domestic 2-cabin</option><option value="threeClass">3-cabin</option></select></label>
+        <label>Aircraft type<select id="aircraft">
+          <option value="">Select or use Lookup Flight</option>
+        </select><span class="help">Selecting an aircraft autofills expected United J/O/Y seats. Verify against Boarding Totals when available.</span></label>
+        <label>Cabin layout<select id="cabinLayout"><option value="domestic2">Domestic 2-cabin</option><option value="threeClass">3-cabin / Premium Plus</option></select></label>
       </div>
       <div class="grid three">
         <label>J/F seats<input id="capacityJ" type="number" inputmode="numeric" placeholder="Auto" /></label>
@@ -73,7 +75,9 @@
         <label>Max acceptable cash fare<input id="maxFare" type="number" inputmode="decimal" placeholder="900" /><span class="help">Decision point is based on when projected fare crosses this amount.</span></label>
       </div>
       <div class="grid two">
-        <label>My paid fare class<input id="paidFareClass" placeholder="e.g. Y, B, M, H, W, S, K, G, N" maxlength="2" /><span class="help">Used for upgrade priority. N/basic economy is treated as not upgrade eligible.</span></label>
+        <label>My paid fare class<select id="paidFareClass">
+          <option value="">Unknown / NRSA</option><option>Y</option><option>B</option><option>M</option><option>E</option><option>U</option><option>H</option><option>Q</option><option>V</option><option>W</option><option>S</option><option>T</option><option>L</option><option>K</option><option>G</option><option>N</option>
+        </select><span class="help">Used for upgrade priority. N/basic economy is treated as not upgrade eligible.</span></label>
         <label>My ticketed seat class<select id="ticketedSeatClass"><option value="">Not specified</option><option>Y</option><option>O</option><option>J</option></select><span class="help">Actual cabin/seat you purchased or are already holding.</span></label>
       </div>
       <div class="grid two">
@@ -128,6 +132,27 @@
       <div id="obsFlightName" class="muted"></div>
       <label>Observation type<select id="sourceType"><option value="boardingTotals">Boarding totals</option><option value="standbyList">Standby list</option><option value="upgradeList">Upgrade list</option><option value="fare">Fare / upgrade offer</option><option value="note">Manual note</option></select></label>
       <label>Paste text or OCR result<textarea id="obsText" rows="8" placeholder="Paste reading, fare quote, or OCR text."></textarea></label>
+      <details class="manual-entry" open>
+        <summary>Manual entry / corrections</summary>
+        <p class="muted">Use any fields you have. Employee fares, public fares, standby, upgrade list, and boarding totals can be entered separately across multiple observations.</p>
+        <div class="section-title blue-title">Boarding totals</div>
+        <div class="grid three"><label>Available J/F<input id="obsAvailJ" type="number" inputmode="numeric" /></label><label>Available O<input id="obsAvailO" type="number" inputmode="numeric" /></label><label>Available Y<input id="obsAvailY" type="number" inputmode="numeric" /></label></div>
+        <div class="grid three"><label>Booked J/F<input id="obsBookedJ" type="number" inputmode="numeric" /></label><label>Booked O<input id="obsBookedO" type="number" inputmode="numeric" /></label><label>Booked Y<input id="obsBookedY" type="number" inputmode="numeric" /></label></div>
+        <div class="grid three"><label>Capacity J/F<input id="obsCapJ" type="number" inputmode="numeric" /></label><label>Capacity O<input id="obsCapO" type="number" inputmode="numeric" /></label><label>Capacity Y<input id="obsCapY" type="number" inputmode="numeric" /></label></div>
+        <div class="grid two"><label>Upgradable Premiers<input id="obsUpgradable" type="number" inputmode="numeric" /></label><label>Upgrade list position<input id="obsUpgradePosition" type="number" inputmode="numeric" /></label></div>
+        <div class="grid two"><label>Total standby<input id="obsStandbyTotal" type="number" inputmode="numeric" /></label><label>My standby position<input id="obsStandbyPosition" type="number" inputmode="numeric" /></label></div>
+        <div class="grid two"><label>Revenue standby<input id="obsRevenueStandby" type="number" inputmode="numeric" /></label><label>Space-available standby<input id="obsSpaceStandby" type="number" inputmode="numeric" /></label></div>
+
+        <div class="section-title amber-title">Fare readings</div>
+        <label>Current buy-now fare $<input id="obsCurrentFare" type="number" inputmode="decimal" /></label>
+        <div class="grid two"><label>Public J/F fare $<input id="obsJPublic" type="number" inputmode="decimal" /></label><label>Employee J/F fare $<input id="obsJEmployee" type="number" inputmode="decimal" /></label></div>
+        <div class="grid two"><label>Public O fare $<input id="obsOPublic" type="number" inputmode="decimal" /></label><label>Employee O fare $<input id="obsOEmployee" type="number" inputmode="decimal" /></label></div>
+        <div class="grid two"><label>Public Y fare $<input id="obsYPublic" type="number" inputmode="decimal" /></label><label>Employee Y fare $<input id="obsYEmployee" type="number" inputmode="decimal" /></label></div>
+
+        <div class="section-title purple-title">Upgrade offers</div>
+        <div class="grid two"><label>O upgrade cash $<input id="obsOUpgradeCash" type="number" inputmode="decimal" /></label><label>O upgrade miles<input id="obsOUpgradeMiles" type="number" inputmode="numeric" /></label></div>
+        <div class="grid two"><label>J/F upgrade cash $<input id="obsJUpgradeCash" type="number" inputmode="decimal" /></label><label>J/F upgrade miles<input id="obsJUpgradeMiles" type="number" inputmode="numeric" /></label></div>
+      </details>
       <label>Import screenshot<input id="obsImage" type="file" accept="image/*" /></label>
       <button type="button" id="ocrBtn">Run OCR</button>
       <div id="ocrStatus" class="muted"></div>

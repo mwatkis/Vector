@@ -1,25 +1,26 @@
-# Vector Flight Decisions v0.3 Lookup + Upgrade Priority
+# Vector — Flight Decisions v0.5
 
-Decision-first iPhone PWA prototype.
+Decision-first nonrev support app for iPhone/GitHub Pages.
 
-## New in v0.3
+## What changed in v0.5
 
-- Aircraft type lookup can now infer typical J/O/Y seat counts.
-- Seat counts are editable and can be overridden by Boarding Totals readings.
-- Add Flight includes paid ticket fare class, Premier status, upgrade instrument, and optional upgrade list position.
-- Janus uses those fields as a heuristic upgrade-priority factor in desired/minimum cabin probabilities.
-- Basic Economy / N is treated as not upgrade-eligible unless the model is later adjusted.
+- New tracked-flight intake uses dropdowns where possible.
+- Aircraft type dropdown auto-populates expected United J/O/Y seat counts.
+- Manual override is always available; Boarding Totals observations should be treated as the source of truth.
+- Observation workflow now supports typing any reading manually, including:
+  - Boarding Totals J/O/Y available, booked, and capacity
+  - Upgradable Premiers
+  - Revenue standby and space-available standby
+  - Your standby and upgrade positions
+  - Public and employee J/O/Y fares
+  - O and J upgrade offers in cash and miles
+- Janus logic now uses dynamic observation fares and upgrade offers, not just values entered at flight creation.
+- Local storage migrates from previous Vector prototype keys when possible.
 
-## Deployment
+## Data source notes
 
-Upload the contents of this folder to the root of the GitHub repository used for Pages.
+Aircraft layouts are seeded from publicly visible United fleet/seat-map information and AeroLOPA-style layout references. They are starting defaults only. Verify with Boarding Totals whenever available.
 
-Files:
-- index.html
-- app.js
-- styles.css
-- manifest.webmanifest
-- README.md
+## Deploy
 
-If existing files have the same names, uploading/replacing them is fine.
-
+Upload the contents of this folder to the root of your GitHub Pages repository.

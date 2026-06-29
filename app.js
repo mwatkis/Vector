@@ -1,4 +1,5 @@
-const STORE_KEY = "vector_decision_cockpit_v04";
+const STORE_KEY = "vector_decision_cockpit_v05";
+const LEGACY_KEYS = ["vector_decision_cockpit_v04", "vector_decision_cockpit_v03", "vector_decision_cockpit_v02"];
 let state = { flights: [], settings: { aeroApiKey: "" } };
 let activeFlightId = null;
 
@@ -35,27 +36,57 @@ function aircraftLabel(ac){
 }
 
 const AIRCRAFT_SEAT_CONFIGS = [
-  { keys:["737-900","739","B739"], layout:"domestic2", J:20, O:0, Y:159, label:"737-900 typical United 20F/159Y" },
-  { keys:["737-900ER","739ER"], layout:"domestic2", J:20, O:0, Y:159, label:"737-900ER typical United 20F/159Y" },
-  { keys:["737-800","738","B738"], layout:"domestic2", J:16, O:0, Y:150, label:"737-800 typical United 16F/150Y" },
-  { keys:["737 MAX 8","737-8","7M8","B38M"], layout:"domestic2", J:16, O:0, Y:150, label:"737 MAX 8 typical United 16F/150Y" },
-  { keys:["737 MAX 9","737-9","7M9","B39M"], layout:"domestic2", J:20, O:0, Y:159, label:"737 MAX 9 typical United 20F/159Y" },
-  { keys:["A319","319"], layout:"domestic2", J:12, O:0, Y:114, label:"A319 typical United 12F/114Y" },
-  { keys:["A320","320"], layout:"domestic2", J:12, O:0, Y:138, label:"A320 typical United 12F/138Y" },
-  { keys:["757-200","752"], layout:"domestic2", J:16, O:0, Y:160, label:"757-200 domestic typical 16F/160Y" },
-  { keys:["757-300","753"], layout:"domestic2", J:24, O:0, Y:210, label:"757-300 typical United 24F/210Y" },
-  { keys:["767-300","763"], layout:"threeClass", J:30, O:46, Y:138, label:"767-300 high-J / Premium Plus estimate" },
-  { keys:["767-400","764"], layout:"threeClass", J:34, O:24, Y:201, label:"767-400 estimate" },
-  { keys:["777-200","772"], layout:"threeClass", J:50, O:24, Y:242, label:"777-200 estimate" },
-  { keys:["777-300","77W","777-300ER"], layout:"threeClass", J:60, O:24, Y:266, label:"777-300ER estimate" },
-  { keys:["787-8","788"], layout:"threeClass", J:28, O:21, Y:194, label:"787-8 estimate" },
-  { keys:["787-9","789"], layout:"threeClass", J:48, O:21, Y:188, label:"787-9 estimate" },
-  { keys:["787-10","78J"], layout:"threeClass", J:44, O:21, Y:253, label:"787-10 estimate" },
+  // Mainline narrowbody, common United layouts. O = 0 on two-cabin domestic aircraft.
+  { keys:["737-700","737 700","7377","73G","B737-700","B737700"], value:"737-700", layout:"domestic2", J:12, O:0, Y:114, label:"737-700 — 12 F / 114 Y" },
+  { keys:["737-800","737 800","738","B738"], value:"737-800 16F", layout:"domestic2", J:16, O:0, Y:150, label:"737-800 — 16 F / 150 Y" },
+  { keys:["737-800 42","738 42"], value:"737-800 16F alt", layout:"domestic2", J:16, O:0, Y:150, label:"737-800 alt — verify against Boarding Totals" },
+  { keys:["737-900","737 900","739","B739"], value:"737-900", layout:"domestic2", J:20, O:0, Y:159, label:"737-900 / 900ER — 20 F / 159 Y" },
+  { keys:["737 MAX 8","737-8","737 8","7M8","B38M","MAX 8"], value:"737 MAX 8", layout:"domestic2", J:16, O:0, Y:150, label:"737 MAX 8 — 16 F / 150 Y" },
+  { keys:["737 MAX 9","737-9","737 9","7M9","B39M","MAX 9"], value:"737 MAX 9", layout:"domestic2", J:20, O:0, Y:159, label:"737 MAX 9 — 20 F / 159 Y" },
+  { keys:["A319","319","AIRBUS A319"], value:"A319", layout:"domestic2", J:12, O:0, Y:114, label:"A319 — 12 F / 114 Y" },
+  { keys:["A320","320","AIRBUS A320"], value:"A320", layout:"domestic2", J:12, O:0, Y:138, label:"A320 — 12 F / 138 Y" },
+  { keys:["A321NEO","A321 NEO","321N","AIRBUS A321"], value:"A321neo", layout:"domestic2", J:20, O:0, Y:180, label:"A321neo — 20 F / 180 Y" },
+  { keys:["757-200 DOM","752 DOM"], value:"757-200 domestic", layout:"domestic2", J:16, O:0, Y:160, label:"757-200 domestic — 16 F / 160 Y" },
+  { keys:["757-200 POLARIS","752 POLARIS","75S","757-200 75S"], value:"757-200 Polaris", layout:"threeClass", J:16, O:45, Y:108, label:"757-200 premium / transcon — 16 J / 45 O / 108 Y" },
+  { keys:["757-300","757 300","753","B753"], value:"757-300", layout:"domestic2", J:24, O:0, Y:210, label:"757-300 — 24 F / 210 Y" },
+
+  // Widebody variants. These are starting defaults; Boarding Totals should always override.
+  { keys:["767-300 76L","76L"], value:"767-300ER 76L", layout:"threeClass", J:24, O:46, Y:121, label:"767-300ER 76L — 24 J / 46 O / 121 Y" },
+  { keys:["767-300 76Q","76Q"], value:"767-300ER 76Q", layout:"threeClass", J:30, O:24, Y:149, label:"767-300ER 76Q — 30 J / 24 O / 149 Y" },
+  { keys:["767-300","767 300","763","B763"], value:"767-300ER", layout:"threeClass", J:30, O:24, Y:149, label:"767-300ER default — 30 J / 24 O / 149 Y" },
+  { keys:["767-400","767 400","764","B764"], value:"767-400ER", layout:"threeClass", J:34, O:24, Y:201, label:"767-400ER — 34 J / 24 O / 201 Y" },
+  { keys:["777-200 DOM","777 200 DOM","77G","77M","77O"], value:"777-200 domestic/Hawaii", layout:"domestic2", J:28, O:0, Y:336, label:"777-200 domestic/Hawaii — 28 J / 336 Y" },
+  { keys:["777-200","777 200","772","B772"], value:"777-200 Polaris", layout:"threeClass", J:50, O:24, Y:242, label:"777-200 Polaris default — 50 J / 24 O / 242 Y" },
+  { keys:["777-300","777 300","777-300ER","77W","B77W"], value:"777-300ER", layout:"threeClass", J:60, O:24, Y:266, label:"777-300ER — 60 J / 24 O / 266 Y" },
+  { keys:["787-8","787 8","788","B788"], value:"787-8", layout:"threeClass", J:28, O:21, Y:194, label:"787-8 — 28 J / 21 O / 194 Y" },
+  { keys:["787-9 HIGH J","789 HIGH J","787-9 64","789 64"], value:"787-9 high-J", layout:"threeClass", J:64, O:35, Y:123, label:"787-9 high-J — 64 J / 35 O / 123 Y" },
+  { keys:["787-9","787 9","789","B789"], value:"787-9", layout:"threeClass", J:48, O:21, Y:188, label:"787-9 — 48 J / 21 O / 188 Y" },
+  { keys:["787-10","787 10","78J","B78X"], value:"787-10", layout:"threeClass", J:44, O:21, Y:253, label:"787-10 — 44 J / 21 O / 253 Y" },
 ];
+function populateAircraftOptions(){
+  const sel = $("aircraft");
+  if(!sel || sel.dataset.loaded) return;
+  const current = sel.value;
+  const opts = [`<option value="">Select or use Lookup Flight</option>`]
+    .concat(AIRCRAFT_SEAT_CONFIGS.map(cfg => `<option value="${cfg.value}">${cfg.label}</option>`));
+  sel.innerHTML = opts.join("");
+  if(current) sel.value = current;
+  sel.dataset.loaded = "1";
+}
 function inferSeatConfig(aircraft){
   const a = String(aircraft||"").toUpperCase().replace(/[–—]/g,"-");
   if(!a) return null;
-  return AIRCRAFT_SEAT_CONFIGS.find(cfg => cfg.keys.some(k => a.includes(String(k).toUpperCase())) ) || null;
+  return AIRCRAFT_SEAT_CONFIGS.find(cfg => a === String(cfg.value).toUpperCase() || cfg.keys.some(k => a.includes(String(k).toUpperCase())) ) || null;
+}
+function setAircraftValue(ac){
+  const sel = $("aircraft"); if(!sel) return;
+  populateAircraftOptions();
+  const cfg = inferSeatConfig(ac);
+  if(cfg){ sel.value = cfg.value; return; }
+  const label = String(ac||"").trim();
+  if(label){
+    const opt = document.createElement("option"); opt.value = label; opt.textContent = `${label} — custom / verify`; sel.appendChild(opt); sel.value = label;
+  }
 }
 function applySeatConfigFromAircraft(force=false){
   const cfg = inferSeatConfig($("aircraft")?.value);
@@ -83,7 +114,7 @@ function applyFlightLookupResult(raw){
   if(depAirport) $("origin").value = String(depAirport).toUpperCase();
   if(arrAirport) $("destination").value = String(arrAirport).toUpperCase();
   if(depTime) $("departureTime").value = toLocalInputValue(depTime);
-  if(ac){ $("aircraft").value = ac; applySeatConfigFromAircraft(true); }
+  if(ac){ setAircraftValue(ac); applySeatConfigFromAircraft(true); }
   const mins = minutesBetween(depTime, arrTime);
   $("lookupStatus").textContent = `Autofilled ${depAirport||"?"} → ${arrAirport||"?"}${mins ? ` • ${Math.floor(mins/60)}h ${String(mins%60).padStart(2,"0")}m` : ""}${ac ? ` • ${ac}` : ""}`;
 }
@@ -110,7 +141,11 @@ async function lookupFlightDetails(){
 
 function save(){ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
 function load(){
-  try { state = JSON.parse(localStorage.getItem(STORE_KEY)) || { flights: [], settings: { aeroApiKey: "" } }; }
+  try {
+    let raw = localStorage.getItem(STORE_KEY);
+    if(!raw){ for(const k of LEGACY_KEYS){ raw = localStorage.getItem(k); if(raw) break; } }
+    state = JSON.parse(raw) || { flights: [], settings: { aeroApiKey: "" } };
+  }
   catch { state = { flights: [], settings: { aeroApiKey: "" } }; }
   state.flights = state.flights || [];
   state.settings = state.settings || { aeroApiKey: "" };
@@ -203,11 +238,59 @@ function parseObservation(text, type){
   }
   return parsed;
 }
+function mergeDeep(target, src){
+  for(const [k,v] of Object.entries(src || {})){
+    if(v === null || v === undefined || v === "") continue;
+    if(typeof v === "object" && !Array.isArray(v)){
+      target[k] = target[k] || {};
+      mergeDeep(target[k], v);
+    } else target[k] = v;
+  }
+  return target;
+}
+function inputNumber(id){
+  const el = $(id); if(!el || el.value === "") return null;
+  const n = Number(el.value); return Number.isFinite(n) ? n : null;
+}
+function manualObservationOverrides(){
+  const boardingTotals = { available:{}, booked:{}, capacity:{} };
+  const map = [
+    ["obsAvailJ","available","J"],["obsAvailO","available","O"],["obsAvailY","available","Y"],
+    ["obsBookedJ","booked","J"],["obsBookedO","booked","O"],["obsBookedY","booked","Y"],
+    ["obsCapJ","capacity","J"],["obsCapO","capacity","O"],["obsCapY","capacity","Y"],
+  ];
+  for(const [id,group,c] of map){ const v=inputNumber(id); if(v!==null) boardingTotals[group][c]=v; }
+  const hasBoarding = ["available","booked","capacity"].some(g => Object.keys(boardingTotals[g]).length);
+  const fares = {
+    J:{ publicFare:inputNumber("obsJPublic"), employeeFare:inputNumber("obsJEmployee") },
+    O:{ publicFare:inputNumber("obsOPublic"), employeeFare:inputNumber("obsOEmployee") },
+    Y:{ publicFare:inputNumber("obsYPublic"), employeeFare:inputNumber("obsYEmployee") },
+  };
+  const upgradeOffers = {
+    O:{ cash:inputNumber("obsOUpgradeCash"), miles:inputNumber("obsOUpgradeMiles") },
+    J:{ cash:inputNumber("obsJUpgradeCash"), miles:inputNumber("obsJUpgradeMiles") },
+  };
+  const override = {};
+  if(hasBoarding) override.boardingTotals = boardingTotals;
+  for(const [k,id] of Object.entries({upgradablePremiers:"obsUpgradable", totalStandby:"obsStandbyTotal", revenueStandby:"obsRevenueStandby", spaceAvailableStandby:"obsSpaceStandby", standbyPosition:"obsStandbyPosition", upgradePosition:"obsUpgradePosition", currentFare:"obsCurrentFare"})){
+    const v=inputNumber(id); if(v!==null) override[k]=v;
+  }
+  if(Object.values(fares).some(o=>Object.values(o).some(v=>v!==null))) override.fares = fares;
+  if(Object.values(upgradeOffers).some(o=>Object.values(o).some(v=>v!==null))) override.upgradeOffers = upgradeOffers;
+  if(!override.currentFare){
+    const publicFares = [fares.Y.publicFare, fares.O.publicFare, fares.J.publicFare].filter(v=>v!==null && v>0);
+    if(publicFares.length) override.currentFare = Math.min(...publicFares);
+  }
+  return override;
+}
+function clearManualObservationFields(){
+  ["obsAvailJ","obsAvailO","obsAvailY","obsBookedJ","obsBookedO","obsBookedY","obsCapJ","obsCapO","obsCapY","obsUpgradable","obsUpgradePosition","obsStandbyTotal","obsStandbyPosition","obsRevenueStandby","obsSpaceStandby","obsCurrentFare","obsJPublic","obsJEmployee","obsOPublic","obsOEmployee","obsYPublic","obsYEmployee","obsOUpgradeCash","obsOUpgradeMiles","obsJUpgradeCash","obsJUpgradeMiles"].forEach(id=>{ if($(id)) $(id).value=""; });
+}
 
 function latestObservation(flight){ return [...(flight.observations || [])].sort((a,b)=>a.timestamp.localeCompare(b.timestamp)).at(-1); }
 function mergedSnapshot(flight){
   const cap = flight.capacity || {};
-  const merged = { available:{J:null,O:null,Y:null}, booked:{J:null,O:null,Y:null}, capacity:{J:cap.J||null,O:cap.O||0,Y:cap.Y||null}, standby:0, upgrade:0, fare:null, rawCount:0 };
+  const merged = { available:{J:null,O:null,Y:null}, booked:{J:null,O:null,Y:null}, capacity:{J:cap.J||null,O:cap.O||0,Y:cap.Y||null}, standby:0, upgrade:0, fare:null, fares:{J:{},O:{},Y:{}}, upgradeOffers:{J:{},O:{}}, rawCount:0 };
   for(const o of (flight.observations || [])){
     merged.rawCount++;
     const p = o.parsed || {};
@@ -219,8 +302,22 @@ function mergedSnapshot(flight){
     }
     if(Number.isFinite(p.totalStandby)) merged.standby = p.totalStandby;
     if(Number.isFinite(p.spaceAvailableStandby)) merged.standby = Math.max(merged.standby, p.spaceAvailableStandby);
+    if(Number.isFinite(p.standbyPosition)) flight.standbyPosition = p.standbyPosition;
+    if(Number.isFinite(p.upgradePosition)) flight.upgradePosition = p.upgradePosition;
     if(Number.isFinite(p.upgradablePremiers)) merged.upgrade = p.upgradablePremiers;
     if(Number.isFinite(p.currentFare)) merged.fare = p.currentFare;
+    for(const c of ["J","O","Y"]){
+      for(const k of ["publicFare","employeeFare"]){
+        const v = p.fares?.[c]?.[k]; if(Number.isFinite(v)) merged.fares[c][k]=v;
+      }
+    }
+    for(const c of ["J","O"]){
+      for(const k of ["cash","miles"]){ const v=p.upgradeOffers?.[c]?.[k]; if(Number.isFinite(v)) merged.upgradeOffers[c][k]=v; }
+    }
+  }
+  if(!merged.fare){
+    const publicFares = [merged.fares.Y.publicFare, merged.fares.O.publicFare, merged.fares.J.publicFare, flight.fareEconomics?.Y?.publicFare, flight.fareEconomics?.O?.publicFare, flight.fareEconomics?.J?.publicFare].filter(v=>Number.isFinite(Number(v)) && Number(v)>0).map(Number);
+    if(publicFares.length) merged.fare = Math.min(...publicFares);
   }
   // If only aircraft capacity is known and no available value has been read yet, assume unknown rather than full availability.
   // Use capacity only as context for pressure/seat-map scaling, not as a claim of open seats.
@@ -362,8 +459,9 @@ function wordsForProb(p){
   return "Very Low";
 }
 function totalUpgradeCost(flight, cabin){
-  const cash = Number(flight?.fareEconomics?.[cabin]?.upgradeCash || 0);
-  const miles = Number(flight?.fareEconomics?.[cabin]?.upgradeMiles || 0);
+  const snap = mergedSnapshot(flight);
+  const cash = Number(snap.upgradeOffers?.[cabin]?.cash ?? flight?.fareEconomics?.[cabin]?.upgradeCash ?? 0);
+  const miles = Number(snap.upgradeOffers?.[cabin]?.miles ?? flight?.fareEconomics?.[cabin]?.upgradeMiles ?? 0);
   const mv = Number(flight.milesValue || .012);
   return cash + miles * mv;
 }
@@ -379,7 +477,8 @@ function criticalityPenalty(flight){
 }
 function farePressureFromEconomics(flight){
   const econ = flight.fareEconomics || {};
-  const maxPublic = Math.max(Number(econ.J?.publicFare||0), Number(econ.O?.publicFare||0), Number(econ.Y?.publicFare||0));
+  const snap = mergedSnapshot(flight);
+  const maxPublic = Math.max(Number(snap.fares?.J?.publicFare||0), Number(snap.fares?.O?.publicFare||0), Number(snap.fares?.Y?.publicFare||0), Number(econ.J?.publicFare||0), Number(econ.O?.publicFare||0), Number(econ.Y?.publicFare||0));
   const invested = Number(flight.costInvested || 0);
   if(!maxPublic && !invested) return 0;
   return clamp(((maxPublic || invested) - invested) / Math.max(1, maxPublic || invested) * .12, 0, .12);
@@ -519,14 +618,14 @@ function openObservation(id){
   activeFlightId = id;
   const f = state.flights.find(x=>x.id===id);
   $("obsFlightName").textContent = `${f.flightNumber} ${f.origin||""} → ${f.destination||""}`;
-  $("obsText").value = ""; $("parsePreview").textContent = ""; $("ocrStatus").textContent = ""; $("obsImage").value = "";
+  $("obsText").value = ""; $("parsePreview").textContent = ""; $("ocrStatus").textContent = ""; $("obsImage").value = ""; clearManualObservationFields();
   $("obsDialog").showModal();
 }
 function saveObservation(){
   const f = state.flights.find(x=>x.id===activeFlightId); if(!f) return;
   const text = $("obsText").value;
   const type = $("sourceType").value;
-  const parsed = parseObservation(text, type);
+  const parsed = mergeDeep(parseObservation(text, type), manualObservationOverrides());
   f.observations.push({ id: uid(), timestamp: nowIso(), sourceType: type, text, parsed });
   f.open = true;
   render();
@@ -551,14 +650,17 @@ function seedDemo(){
 }
 
 function wire(){
-  $("addFlightBtn").onclick = () => { $("flightForm").reset(); $("lookupStatus").textContent = "Optional: autofill route, times, duration, aircraft."; $("flightDialog").showModal(); };
+  populateAircraftOptions();
+  $("addFlightBtn").onclick = () => { $("flightForm").reset(); populateAircraftOptions(); $("lookupStatus").textContent = "Optional: autofill route, times, duration, aircraft."; $("flightDialog").showModal(); };
   $("lookupFlightBtn").onclick = lookupFlightDetails;
   $("aircraft").addEventListener("change", () => applySeatConfigFromAircraft(false));
   $("aeroKey").value = state.settings?.aeroApiKey || "";
   $("aeroKey").addEventListener("change", () => { state.settings.aeroApiKey = $("aeroKey").value.trim(); save(); });
   $("saveFlight").onclick = (e) => { e.preventDefault(); addFlightFromForm(); $("flightDialog").close(); };
   $("saveObs").onclick = (e) => { e.preventDefault(); saveObservation(); $("obsDialog").close(); };
-  $("obsText").addEventListener("input", () => { const p = parseObservation($("obsText").value,$("sourceType").value); $("parsePreview").textContent = JSON.stringify(p,null,2); });
+  const refreshPreview = () => { const p = mergeDeep(parseObservation($("obsText").value,$("sourceType").value), manualObservationOverrides()); $("parsePreview").textContent = JSON.stringify(p,null,2); };
+  $("obsText").addEventListener("input", refreshPreview);
+  ["obsAvailJ","obsAvailO","obsAvailY","obsBookedJ","obsBookedO","obsBookedY","obsCapJ","obsCapO","obsCapY","obsUpgradable","obsUpgradePosition","obsStandbyTotal","obsStandbyPosition","obsRevenueStandby","obsSpaceStandby","obsCurrentFare","obsJPublic","obsJEmployee","obsOPublic","obsOEmployee","obsYPublic","obsYEmployee","obsOUpgradeCash","obsOUpgradeMiles","obsJUpgradeCash","obsJUpgradeMiles"].forEach(id=>{ if($(id)) $(id).addEventListener("input", refreshPreview); });
   $("ocrBtn").onclick = async () => {
     const file = $("obsImage").files[0]; if(!file) return alert("Choose a screenshot first.");
     if(!window.Tesseract) return alert("OCR library is not loaded yet. Try again in a moment.");
